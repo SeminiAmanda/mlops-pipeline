@@ -1,0 +1,6 @@
+outs:
+- md5: 6d60d26e98e636ea4a5669fd3994161f.dir
+  size: 5048130
+  nfiles: 2227
+  hash: md5
+  path: bbc
