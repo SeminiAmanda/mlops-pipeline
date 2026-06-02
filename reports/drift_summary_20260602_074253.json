@@ -1,0 +1,8 @@
+{
+  "timestamp": "20260602_074253",
+  "scenario": "normal",
+  "drift_detected": false,
+  "drift_share": 0.0,
+  "action": "OK",
+  "report": "reports/drift_report_normal_20260602_074253.html"
+}

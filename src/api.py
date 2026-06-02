@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from src.predict import predict
 import logging
 import time
+from src.monitor import run_drift_detection
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,6 +31,14 @@ def health():
 def predict_endpoint(request: PredictRequest):
     if not request.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
+
+
+@app.post("/monitor")
+def monitor_endpoint(scenario: str = "normal"):
+    result = run_drift_detection(scenario)
+    return result
+
+
 
     start = time.time()
     result = predict(request.text)
