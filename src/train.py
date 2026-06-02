@@ -1,4 +1,5 @@
 import pickle
+import os
 import mlflow
 import mlflow.sklearn
 import numpy as np
@@ -28,11 +29,9 @@ def train():
     mlflow.set_experiment("bbc-news-classification")
 
     with mlflow.start_run():
-        # Hyperparameters
         C = 1.0
         max_iter = 1000
 
-        # Log params
         mlflow.log_param("model_type", "LogisticRegression")
         mlflow.log_param("C", C)
         mlflow.log_param("max_iter", max_iter)
@@ -40,12 +39,10 @@ def train():
         mlflow.log_param("test_size", len(X_test))
         mlflow.log_param("num_classes", len(classes))
 
-        # Train
         logger.info("Training model...")
         model = LogisticRegression(C=C, max_iter=max_iter, random_state=42)
         model.fit(X_train, y_train)
 
-        # Evaluate
         y_pred = model.predict(X_test)
         acc = accuracy_score(y_test, y_pred)
         report = classification_report(y_test, y_pred, target_names=classes)
@@ -53,14 +50,17 @@ def train():
         logger.info(f"Accuracy: {acc:.4f}")
         logger.info(f"\n{report}")
 
-        # Log metrics
         mlflow.log_metric("accuracy", acc)
-
-        # Log model
         mlflow.sklearn.log_model(model, "model")
 
         run_id = mlflow.active_run().info.run_id
         logger.info(f"Run ID: {run_id}")
+
+        # Save model as pickle for Docker serving
+        os.makedirs("data/processed", exist_ok=True)
+        with open("data/processed/model.pkl", "wb") as f:
+            pickle.dump(model, f)
+        logger.info("Saved model to data/processed/model.pkl")
 
     return acc
 
