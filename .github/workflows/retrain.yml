@@ -1,0 +1,96 @@
+name: Automated Retraining Pipeline
+
+on:
+  # Manual trigger (for testing)
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: 'Drift scenario to simulate'
+        required: true
+        default: 'normal'
+        type: choice
+        options:
+          - normal
+          - drift
+
+  # Scheduled — runs every day at midnight
+  schedule:
+    - cron: '0 0 * * *'
+
+  # Trigger on push to main (for demo purposes)
+  push:
+    paths:
+      - 'data/**'
+      - 'src/**'
+
+jobs:
+  detect-drift-and-retrain:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install scikit-learn pandas numpy mlflow evidently fastapi uvicorn
+
+      - name: Restore processed data
+        run: |
+          # In real project this would pull from DVC remote
+          # For demo we regenerate from raw data
+          echo "Data restoration step"
+
+      - name: Run drift detection
+        id: drift
+        run: |
+          python src/monitor.py ${{ github.event.inputs.scenario || 'normal' }} > drift_output.json
+          cat drift_output.json
+          DRIFT=$(python -c "import json; d=json.load(open('drift_output.json')); print(d['drift_detected'])")
+          echo "drift_detected=$DRIFT" >> $GITHUB_OUTPUT
+
+      - name: Log drift result
+        run: |
+          echo "Drift detected: ${{ steps.drift.outputs.drift_detected }}"
+
+      - name: Retrain model (only if drift detected)
+        if: steps.drift.outputs.drift_detected == 'True'
+        run: |
+          echo "Drift detected — triggering retraining pipeline"
+          python src/ingest.py
+          python src/features.py
+          python src/train.py
+          echo "Retraining complete"
+
+      - name: Skip retraining (no drift)
+        if: steps.drift.outputs.drift_detected == 'False'
+        run: |
+          echo "No drift detected — model is healthy, skipping retraining"
+
+      - name: Upload drift report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: drift-report
+          path: reports/
+          retention-days: 30
+
+      - name: Upload retrained model
+        uses: actions/upload-artifact@v4
+        if: steps.drift.outputs.drift_detected == 'True'
+        with:
+          name: retrained-model
+          path: data/processed/model.pkl
+          retention-days: 30
