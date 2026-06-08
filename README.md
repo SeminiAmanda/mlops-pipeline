@@ -222,7 +222,7 @@ HTML drift reports are saved to `reports/` with full feature-level breakdown.
 
 ---
 
-## CV Bullet Points
+## Bullet Points
 
 ```
 • Built end-to-end MLOps pipeline for BBC News classification —
@@ -251,3 +251,4 @@ HTML drift reports are saved to `reports/` with full feature-level breakdown.
 
 **Amanda Sewwandi**
 University of Sri Jayewardenepura
+[text](https://github.com/SeminiAmanda/mlops-pipeline)

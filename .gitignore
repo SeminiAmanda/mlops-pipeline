@@ -25,3 +25,6 @@ data/processed/
 
 mlruns/
 mlflow.db
+
+.DS_Store
+**/.DS_Store
