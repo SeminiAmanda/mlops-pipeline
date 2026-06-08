@@ -1,8 +1,0 @@
-{
-  "timestamp": "20260602_074339",
-  "scenario": "drift",
-  "drift_detected": false,
-  "drift_share": 0.0,
-  "action": "OK",
-  "report": "reports/drift_report_drift_20260602_074339.html"
-}
